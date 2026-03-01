@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.andrewshea.morning-briefing</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/Users/andrewshea/Projects/morning-briefing/venv/bin/python3</string>
+        <string>/Users/andrewshea/Projects/morning-briefing/briefing.py</string>
+    </array>
+
+    <key>WorkingDirectory</key>
+    <string>/Users/andrewshea/Projects/morning-briefing</string>
+
+    <key>StartCalendarInterval</key>
+    <dict>
+        <key>Hour</key>
+        <integer>6</integer>
+        <key>Minute</key>
+        <integer>30</integer>
+    </dict>
+
+    <key>StandardOutPath</key>
+    <string>/Users/andrewshea/Projects/morning-briefing/logs/launchd_stdout.log</string>
+
+    <key>StandardErrorPath</key>
+    <string>/Users/andrewshea/Projects/morning-briefing/logs/launchd_stderr.log</string>
+
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>/usr/local/bin:/usr/bin:/bin</string>
+    </dict>
+</dict>
+</plist>
