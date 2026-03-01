@@ -3,16 +3,16 @@
 <plist version="1.0">
 <dict>
     <key>Label</key>
-    <string>com.andrewshea.morning-briefing</string>
+    <string>com.andrewshea.morning_briefing</string>
 
     <key>ProgramArguments</key>
     <array>
-        <string>/Users/andrewshea/Projects/morning-briefing/venv/bin/python3</string>
-        <string>/Users/andrewshea/Projects/morning-briefing/briefing.py</string>
+        <string>/Users/andrewshea/Projects/morning_briefing/venv/bin/python3</string>
+        <string>/Users/andrewshea/Projects/morning_briefing/briefing.py</string>
     </array>
 
     <key>WorkingDirectory</key>
-    <string>/Users/andrewshea/Projects/morning-briefing</string>
+    <string>/Users/andrewshea/Projects/morning_briefing</string>
 
     <key>StartCalendarInterval</key>
     <dict>
@@ -23,10 +23,10 @@
     </dict>
 
     <key>StandardOutPath</key>
-    <string>/Users/andrewshea/Projects/morning-briefing/logs/launchd_stdout.log</string>
+    <string>/Users/andrewshea/Projects/morning_briefing/logs/launchd_stdout.log</string>
 
     <key>StandardErrorPath</key>
-    <string>/Users/andrewshea/Projects/morning-briefing/logs/launchd_stderr.log</string>
+    <string>/Users/andrewshea/Projects/morning_briefing/logs/launchd_stderr.log</string>
 
     <key>EnvironmentVariables</key>
     <dict>

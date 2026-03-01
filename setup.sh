@@ -37,7 +37,7 @@ fi
 mkdir -p logs
 
 # 5. Install launchd plist
-PLIST_NAME="com.andrewshea.morning-briefing"
+PLIST_NAME="com.andrewshea.morning_briefing"
 PLIST_SRC="$PWD/${PLIST_NAME}.plist"
 PLIST_DST="$HOME/Library/LaunchAgents/${PLIST_NAME}.plist"
 
