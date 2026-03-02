@@ -3,5 +3,6 @@ venv/
 logs/
 __pycache__/
 *.pyc
+helpers/imessage_helper
 .DS_Store
 test_output.html

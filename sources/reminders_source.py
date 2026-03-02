@@ -2,53 +2,19 @@ import json
 import logging
 import subprocess
 from datetime import datetime, timedelta
+from pathlib import Path
 
 from config import REMINDER_LISTS
 
 log = logging.getLogger(__name__)
 
+HELPER = Path(__file__).parent.parent / "helpers" / "reminders_helper.swift"
+
 
 def fetch_reminders() -> str:
-    list_names_json = json.dumps(REMINDER_LISTS)
-
-    # Use bulk property access (.name(), .completed(), .dueDate()) which is
-    # orders of magnitude faster than per-item access or .whose() filters.
-    jxa_script = f'''
-var app = Application("Reminders");
-var targetNames = {list_names_json};
-var results = {{}};
-
-for (var i = 0; i < targetNames.length; i++) {{
-    var listName = targetNames[i];
-    try {{
-        var rList = app.lists.byName(listName);
-        var names = rList.reminders.name();
-        var completed = rList.reminders.completed();
-        var dueDates = [];
-        try {{ dueDates = rList.reminders.dueDate(); }} catch(e) {{}}
-
-        var items = [];
-        for (var j = 0; j < names.length; j++) {{
-            if (!completed[j]) {{
-                var item = {{name: names[j]}};
-                if (dueDates[j]) {{
-                    item.due = dueDates[j].toISOString();
-                }}
-                items.push(item);
-            }}
-        }}
-        if (items.length > 0) {{
-            results[listName] = items;
-        }}
-    }} catch(e) {{}}
-}}
-
-JSON.stringify(results);
-'''
-
     try:
         result = subprocess.run(
-            ["osascript", "-l", "JavaScript", "-e", jxa_script],
+            ["swift", str(HELPER)] + REMINDER_LISTS,
             capture_output=True,
             text=True,
             timeout=30,
@@ -73,11 +39,10 @@ JSON.stringify(results);
             continue
         lines = []
         for item in items:
-            # Filter: include items with no due date, or due within 7 days
             if "due" in item:
                 try:
-                    due_dt = datetime.fromisoformat(item["due"].replace("Z", "+00:00"))
-                    if due_dt.replace(tzinfo=None) > cutoff:
+                    due_dt = datetime.strptime(item["due"], "%Y-%m-%d")
+                    if due_dt > cutoff:
                         continue
                     display_due = due_dt.strftime("%-m/%-d")
                 except ValueError:

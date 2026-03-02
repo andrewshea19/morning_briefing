@@ -33,10 +33,16 @@ else
     echo ".env already exists."
 fi
 
-# 4. Create logs directory
+# 4. Compile Swift helpers
+echo "Compiling Swift helpers..."
+mkdir -p helpers
+swiftc -O helpers/imessage_helper.swift -o helpers/imessage_helper -framework Contacts
+echo "  helpers/imessage_helper compiled."
+
+# 5. Create logs directory
 mkdir -p logs
 
-# 5. Install launchd plist
+# 6. Install launchd plist
 PLIST_NAME="com.andrewshea.morning_briefing"
 PLIST_SRC="$PWD/${PLIST_NAME}.plist"
 PLIST_DST="$HOME/Library/LaunchAgents/${PLIST_NAME}.plist"

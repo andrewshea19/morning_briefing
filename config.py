@@ -47,10 +47,9 @@ GMAIL_LOOKBACK_HOURS = 10
 CALENDAR_NAMES = [
     "Calendar",
     "K&A",
-    "andrewshea19",
-    "shea.andrew7",
-    "Holidays",
-    "Scheduled Reminders",
+    "andrewshea19@gmail.com",
+    "US Holidays",
+    "Holidays in United States",
     "Birthdays",
 ]
 
