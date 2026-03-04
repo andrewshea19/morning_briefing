@@ -1,6 +1,5 @@
-#!/usr/bin/env swift
 // Fetches incomplete reminders via EventKit (no Reminders.app needed).
-// Usage: swift reminders_helper.swift [ListName1] [ListName2] ...
+// Usage: reminders_helper [ListName1] [ListName2] ...
 // Outputs JSON object keyed by list name to stdout.
 
 import EventKit
@@ -16,10 +15,9 @@ store.requestFullAccessToReminders { granted, _ in
     accessGranted = granted
     sem.signal()
 }
-sem.wait()
 
-guard accessGranted else {
-    fputs("ERROR: Reminders access not granted. Open System Settings > Privacy & Security > Reminders and grant access to Terminal (or swift).\n", stderr)
+if sem.wait(timeout: .now() + 5) == .timedOut || !accessGranted {
+    fputs("ERROR: Reminders access not granted. Run this binary once from Terminal to trigger the permission prompt, then grant access in System Settings > Privacy & Security > Reminders.\n", stderr)
     exit(1)
 }
 
@@ -38,7 +36,11 @@ store.fetchReminders(matching: predicate) { result in
     reminders = result ?? []
     fetchSem.signal()
 }
-fetchSem.wait()
+
+if fetchSem.wait(timeout: .now() + 15) == .timedOut {
+    fputs("ERROR: Timed out fetching reminders.\n", stderr)
+    exit(1)
+}
 
 let dateFmt = DateFormatter()
 dateFmt.dateFormat = "yyyy-MM-dd"

@@ -11,12 +11,16 @@ import Contacts
 let lookbackHours = Int(CommandLine.arguments.dropFirst().first ?? "10") ?? 10
 let dbPath = NSHomeDirectory() + "/Library/Messages/chat.db"
 
-// --- Load Contacts ---
+// --- Load Contacts (best-effort, skip if no permission) ---
 let contactStore = CNContactStore()
 let cSem = DispatchSemaphore(value: 0)
 var cGranted = false
 contactStore.requestAccess(for: .contacts) { g, _ in cGranted = g; cSem.signal() }
-cSem.wait()
+
+// Timeout after 5s — avoids hanging if TCC dialog can't be shown (launchd)
+if cSem.wait(timeout: .now() + 5) == .timedOut {
+    cGranted = false
+}
 
 var contactMap: [String: String] = [:]
 if cGranted {

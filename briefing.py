@@ -38,14 +38,23 @@ def gather_sources():
     with ThreadPoolExecutor(max_workers=5) as pool:
         futures = {pool.submit(fn): name for name, fn in SOURCES.items()}
 
-        for future in as_completed(futures):
-            name = futures[future]
-            try:
-                results[name] = future.result(timeout=60)
-                log.info("✓ %s fetched", name)
-            except Exception:
-                log.exception("✗ %s failed", name)
-                results[name] = f"{name} data unavailable."
+        try:
+            for future in as_completed(futures, timeout=90):
+                name = futures[future]
+                try:
+                    results[name] = future.result(timeout=60)
+                    log.info("✓ %s fetched", name)
+                except Exception:
+                    log.exception("✗ %s failed", name)
+                    results[name] = f"{name} data unavailable."
+        except TimeoutError:
+            log.error("gather_sources timed out after 90s")
+
+    # Mark any sources that didn't complete in time
+    for name in SOURCES:
+        if name not in results:
+            log.error("✗ %s timed out", name)
+            results[name] = f"{name} data unavailable."
 
     # Return in presentation order
     return {k: results[k] for k in SECTION_ORDER if k in results}

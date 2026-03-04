@@ -1,6 +1,5 @@
-#!/usr/bin/env swift
 // Fetches today's calendar events via EventKit (no Calendar.app needed).
-// Usage: swift calendar_helper.swift [CalendarName1] [CalendarName2] ...
+// Usage: calendar_helper [CalendarName1] [CalendarName2] ...
 // Outputs JSON array to stdout.
 
 import EventKit
@@ -16,10 +15,9 @@ store.requestFullAccessToEvents { granted, _ in
     accessGranted = granted
     sem.signal()
 }
-sem.wait()
 
-guard accessGranted else {
-    fputs("ERROR: Calendar access not granted. Open System Settings > Privacy & Security > Calendars and grant access to Terminal (or swift).\n", stderr)
+if sem.wait(timeout: .now() + 5) == .timedOut || !accessGranted {
+    fputs("ERROR: Calendar access not granted. Run this binary once from Terminal to trigger the permission prompt, then grant access in System Settings > Privacy & Security > Calendars.\n", stderr)
     exit(1)
 }
 

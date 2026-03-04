@@ -8,7 +8,7 @@ from config import CALENDAR_NAMES
 
 log = logging.getLogger(__name__)
 
-HELPER = Path(__file__).parent.parent / "helpers" / "calendar_helper.swift"
+HELPER = Path(__file__).parent.parent / "helpers" / "calendar_helper"
 
 
 def fetch_events() -> str:
@@ -16,7 +16,7 @@ def fetch_events() -> str:
 
     try:
         result = subprocess.run(
-            ["swift", str(HELPER)] + CALENDAR_NAMES,
+            [str(HELPER)] + CALENDAR_NAMES,
             capture_output=True,
             text=True,
             timeout=30,

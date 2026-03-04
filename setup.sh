@@ -36,6 +36,10 @@ fi
 # 4. Compile Swift helpers
 echo "Compiling Swift helpers..."
 mkdir -p helpers
+swiftc -O helpers/calendar_helper.swift -o helpers/calendar_helper -framework EventKit
+echo "  helpers/calendar_helper compiled."
+swiftc -O helpers/reminders_helper.swift -o helpers/reminders_helper -framework EventKit
+echo "  helpers/reminders_helper compiled."
 swiftc -O helpers/imessage_helper.swift -o helpers/imessage_helper -framework Contacts
 echo "  helpers/imessage_helper compiled."
 

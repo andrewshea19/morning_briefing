@@ -8,13 +8,13 @@ from config import REMINDER_LISTS
 
 log = logging.getLogger(__name__)
 
-HELPER = Path(__file__).parent.parent / "helpers" / "reminders_helper.swift"
+HELPER = Path(__file__).parent.parent / "helpers" / "reminders_helper"
 
 
 def fetch_reminders() -> str:
     try:
         result = subprocess.run(
-            ["swift", str(HELPER)] + REMINDER_LISTS,
+            [str(HELPER)] + REMINDER_LISTS,
             capture_output=True,
             text=True,
             timeout=30,
