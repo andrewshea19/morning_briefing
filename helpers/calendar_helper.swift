@@ -1,6 +1,6 @@
-// Fetches today's calendar events via EventKit (no Calendar.app needed).
+// Fetches today's calendar events + next 5 upcoming via EventKit.
 // Usage: calendar_helper [CalendarName1] [CalendarName2] ...
-// Outputs JSON array to stdout.
+// Outputs JSON with "today" and "upcoming" arrays to stdout.
 
 import EventKit
 import Foundation
@@ -30,14 +30,13 @@ if !targetNames.isEmpty {
     ekCalendars = store.calendars(for: .event).filter { targetNames.contains($0.title) }
 }
 
-let predicate = store.predicateForEvents(withStart: startOfDay, end: endOfDay, calendars: ekCalendars)
-let events = store.events(matching: predicate).sorted { $0.startDate < $1.startDate }
-
 let timeFmt = DateFormatter()
 timeFmt.dateFormat = "h:mm a"
 
-var results: [[String: Any]] = []
-for event in events {
+let dateFmt = DateFormatter()
+dateFmt.dateFormat = "E M/d"
+
+func eventToDict(_ event: EKEvent, includeDate: Bool = false) -> [String: Any] {
     var entry: [String: Any] = [
         "calendar": event.calendar.title,
         "title": event.title ?? "(no title)",
@@ -48,11 +47,30 @@ for event in events {
     } else {
         entry["time"] = timeFmt.string(from: event.startDate) + " - " + timeFmt.string(from: event.endDate)
     }
+    if includeDate {
+        entry["date"] = dateFmt.string(from: event.startDate)
+    }
     if let loc = event.location, !loc.isEmpty {
         entry["location"] = loc
     }
-    results.append(entry)
+    return entry
 }
 
-let data = try! JSONSerialization.data(withJSONObject: results, options: [])
+// Today's events
+let todayPredicate = store.predicateForEvents(withStart: startOfDay, end: endOfDay, calendars: ekCalendars)
+let todayEvents = store.events(matching: todayPredicate).sorted { $0.startDate < $1.startDate }
+
+// Next 5 upcoming events (after today, look ahead 90 days)
+let lookAhead = cal.date(byAdding: .day, value: 90, to: endOfDay)!
+let futurePredicate = store.predicateForEvents(withStart: endOfDay, end: lookAhead, calendars: ekCalendars)
+let futureEvents = store.events(matching: futurePredicate)
+    .sorted { $0.startDate < $1.startDate }
+    .prefix(5)
+
+let output: [String: Any] = [
+    "today": todayEvents.map { eventToDict($0) },
+    "upcoming": futureEvents.map { eventToDict($0, includeDate: true) },
+]
+
+let data = try! JSONSerialization.data(withJSONObject: output, options: [])
 print(String(data: data, encoding: .utf8)!)

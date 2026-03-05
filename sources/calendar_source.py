@@ -24,24 +24,31 @@ def fetch_events() -> str:
         if result.returncode != 0:
             raise RuntimeError(result.stderr.strip())
 
-        events = json.loads(result.stdout.strip())
+        data = json.loads(result.stdout.strip())
     except Exception:
         log.exception("Failed to fetch calendar events")
         return "Calendar events unavailable."
 
-    if not events:
-        return f"## Calendar — {today}\nNo events today."
+    today_events = data.get("today", [])
+    upcoming = data.get("upcoming", [])
 
-    lines = []
-    for e in events:
-        time_str = e.get("time", "")
-        title = e.get("title", "")
-        cal = e.get("calendar", "")
-        loc = e.get("location", "")
+    parts = [f"## Calendar — {today}"]
 
-        line = f"- {cal} | {time_str} | {title}"
-        if loc:
-            line += f" @ {loc}"
-        lines.append(line)
+    if today_events:
+        for e in today_events:
+            line = f"- {e['calendar']} | {e['time']} | {e['title']}"
+            if e.get("location"):
+                line += f" @ {e['location']}"
+            parts.append(line)
+    else:
+        parts.append("No events today.")
 
-    return f"## Calendar — {today}\n" + "\n".join(lines)
+    if upcoming:
+        parts.append("\n### Upcoming")
+        for e in upcoming:
+            line = f"- {e.get('date', '')} | {e['time']} | {e['title']}"
+            if e.get("location"):
+                line += f" @ {e['location']}"
+            parts.append(line)
+
+    return "\n".join(parts)
