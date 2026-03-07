@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Morning Briefing — Daily email digest orchestrator."""
+"""Morning Briefing — Daily digest orchestrator."""
 
 import sys
 import os
@@ -8,9 +8,11 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 # Ensure project root is on sys.path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
+from config import BRIEFING_DELIVERY
 from utils import setup_logging
 from summarizer import summarize
 from emailer import send_briefing
+from messenger import send_briefing_text
 
 from sources.gmail_source import fetch_emails
 from sources.calendar_source import fetch_events
@@ -68,11 +70,14 @@ def main():
 
     # 2. Summarize with Claude
     log.info("Summarizing with Claude...")
-    html_body, plain_text = summarize(raw)
-
-    # 3. Send email
-    log.info("Sending briefing email...")
-    success = send_briefing(html_body, fallback_text=plain_text)
+    if BRIEFING_DELIVERY == "imessage":
+        body, _ = summarize(raw, output_format="text")
+        log.info("Sending briefing via iMessage...")
+        success = send_briefing_text(body)
+    else:
+        html_body, plain_text = summarize(raw, output_format="html")
+        log.info("Sending briefing email...")
+        success = send_briefing(html_body, fallback_text=plain_text)
 
     if success:
         log.info("Briefing complete!")

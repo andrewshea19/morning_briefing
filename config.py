@@ -34,6 +34,10 @@ SMTP_ADDRESS = GMAIL_ACCOUNTS[0]["address"]
 SMTP_PASSWORD = GMAIL_ACCOUNTS[0]["password"]
 BRIEFING_RECIPIENT = os.environ.get("BRIEFING_RECIPIENT", "andrewshea19@gmail.com")
 
+# iMessage delivery
+IMESSAGE_RECIPIENT = os.environ.get("IMESSAGE_RECIPIENT", "+13304217089")
+BRIEFING_DELIVERY = os.environ.get("BRIEFING_DELIVERY", "imessage")  # "imessage" or "email"
+
 # IMAP/SMTP servers
 IMAP_SERVER = "imap.gmail.com"
 SMTP_SERVER = "smtp.gmail.com"

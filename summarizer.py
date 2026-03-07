@@ -5,7 +5,7 @@ from config import ANTHROPIC_API_KEY, CLAUDE_MODEL
 
 log = logging.getLogger(__name__)
 
-SYSTEM_PROMPT = """You are a personal assistant creating a morning briefing email.
+SYSTEM_PROMPT_HTML = """You are a personal assistant creating a morning briefing email.
 Transform the raw data below into a compact, scannable HTML email digest.
 
 Layout rules:
@@ -32,11 +32,34 @@ Content rules:
 - News: Include major news, breaking news, front-page stories, and large exclusives/investigations. Slightly prefer WSJ sources over NYT when covering the same story. Ignore quizzes, lifestyle, profiles, fluff, and minor feature stories. For Markets/Business, include genuinely market-moving news (major earnings, crashes, policy changes, large-scale economic shifts, and major corporate news like spin-offs or strategic moves by notable companies like Trump Media). Skip routine small deals and minor corporate stories. Group into 3-5 topic categories (e.g. "Middle East", "Markets", "Tech"). Each category on its own line/bullet. For each category write a 1-2 sentence summary with key linked headlines woven inline. Do NOT list every headline — curate for significance.
 - The email must render well in Gmail web and mobile."""
 
+SYSTEM_PROMPT_TEXT = """You are a personal assistant creating a morning briefing delivered as an iMessage text.
+Transform the raw data into a concise, scannable plain text message.
 
-def summarize(raw_sections):
-    """Summarize raw source data into an HTML briefing.
+Format rules:
+- Plain text only. No HTML, no markdown.
+- Every line item MUST start with "- " (dash space).
+- Use blank lines between sections, but NO blank line between a section header and its first item.
+- Section headers: just the name in caps on its own line (e.g. "SCHEDULE"), immediately followed by the first "- " item on the next line.
+- Keep it SHORT. Target under 1500 characters total. Be ruthlessly concise.
+- NO intro, greeting, or sign-off. Jump straight into content.
+- If a section has no data or says "unavailable", omit it entirely.
+Content rules:
+- Present sections in this order: Schedule, Reminders, Messages, Email, News.
+- Schedule: list events chronologically. Lead with time: "9:00a - Amazon returns". Include upcoming events with their date: "Thu 3/5 8:00a - MAE Panel".
+- Reminders: lead with due date: "3/4 - Mutual of Omaha check in". Flag items due today or overdue with ⚠️.
+- Email: one line per important email, max 5. Exclude spam, OTPs, 2FA, transactional emails.
+- Messages: one line per conversation summarizing the key point. Note if reply seems needed.
+- News: VERY tight. Max 4-5 bullets total. Only the biggest stories of the day — front-page, breaking, or market-moving. Include major business/market news if it's front-page caliber (e.g. crashes, major earnings, big policy shifts, notable corporate moves). Skip routine small deals, minor corporate stories, and lifestyle/feature pieces. Each bullet is one sentence with the key headline linked as a URL in parentheses. Always include the article URL from the raw data so it's tappable in iMessage."""
 
-    Returns (html_body, plain_text_fallback).
+
+def summarize(raw_sections, output_format="html"):
+    """Summarize raw source data into a briefing.
+
+    Args:
+        raw_sections: dict of source name -> raw content
+        output_format: "html" for email, "text" for iMessage
+
+    Returns (body, raw_combined).
     """
     today = datetime.now().strftime("%A, %B %-d, %Y")
 
@@ -44,36 +67,48 @@ def summarize(raw_sections):
     for source_name, content in raw_sections.items():
         combined += f"\n---\n{content}\n"
 
+    if output_format == "text":
+        system_prompt = SYSTEM_PROMPT_TEXT
+        user_msg = f"Here is today's raw data. Create the plain text briefing.\n\n{combined}"
+        max_tokens = 1024
+    else:
+        system_prompt = SYSTEM_PROMPT_HTML
+        user_msg = f"Here is today's raw data. Create the HTML briefing email.\n\n{combined}"
+        max_tokens = 4096
+
     try:
         import anthropic
 
         client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
         response = client.messages.create(
             model=CLAUDE_MODEL,
-            max_tokens=4096,
-            system=SYSTEM_PROMPT,
+            max_tokens=max_tokens,
+            system=system_prompt,
             messages=[
                 {
                     "role": "user",
-                    "content": f"Here is today's raw data. Create the HTML briefing email.\n\n{combined}",
+                    "content": user_msg,
                 }
             ],
         )
-        html = response.content[0].text
+        body = response.content[0].text
 
-        # If Claude wrapped it in ```html fences, strip them
-        if html.startswith("```html"):
-            html = html[7:]
-        if html.startswith("```"):
-            html = html[3:]
-        if html.endswith("```"):
-            html = html[:-3]
-        html = html.strip()
+        if output_format == "html":
+            # If Claude wrapped it in ```html fences, strip them
+            if body.startswith("```html"):
+                body = body[7:]
+            if body.startswith("```"):
+                body = body[3:]
+            if body.endswith("```"):
+                body = body[:-3]
 
-        return html, combined
+        body = body.strip()
+        return body, combined
 
     except Exception:
         log.exception("Claude API summarization failed, using plain-text fallback")
+        if output_format == "text":
+            return combined, combined
         return _plain_fallback(raw_sections, today), combined
 
 

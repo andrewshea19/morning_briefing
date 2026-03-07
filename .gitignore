@@ -6,5 +6,6 @@ __pycache__/
 helpers/calendar_helper
 helpers/reminders_helper
 helpers/imessage_helper
+helpers/send_imessage
 .DS_Store
 test_output.html

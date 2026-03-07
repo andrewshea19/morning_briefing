@@ -42,6 +42,8 @@ swiftc -O helpers/reminders_helper.swift -o helpers/reminders_helper -framework 
 echo "  helpers/reminders_helper compiled."
 swiftc -O helpers/imessage_helper.swift -o helpers/imessage_helper -framework Contacts
 echo "  helpers/imessage_helper compiled."
+swiftc -O helpers/send_imessage.swift -o helpers/send_imessage
+echo "  helpers/send_imessage compiled."
 
 # 5. Create logs directory
 mkdir -p logs
